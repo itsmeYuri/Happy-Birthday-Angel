@@ -783,6 +783,108 @@ button:active {
     }
 }
 
+/* Flower Page Animation */
+.flower-anim-wrapper {
+    margin: 40px auto 10px;
+    max-width: 260px;
+    height: 260px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.flower-plant {
+    position: relative;
+    width: 90px;
+    height: 190px;
+    transform-origin: bottom center;
+    animation: flowerGrow 2200ms ease-out forwards, flowerSway 6000ms ease-in-out 2200ms infinite alternate;
+}
+
+.flower-stem {
+    width: 8px;
+    height: 130px;
+    background: linear-gradient(to top, #1c8c3a, #3fbf6d);
+    border-radius: 999px;
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.flower-stem::before,
+.flower-stem::after {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 16px;
+    background: radial-gradient(circle at 10% 50%, #e7ffd6 0%, #2fa857 45%, #156936 100%);
+    border-radius: 100% 0 100% 0;
+    top: 40%;
+}
+
+.flower-stem::before {
+    left: -22px;
+    transform: rotate(-22deg);
+}
+
+.flower-stem::after {
+    right: -22px;
+    transform: scaleX(-1) rotate(-22deg);
+}
+
+.flower-bloom {
+    position: absolute;
+    bottom: 86px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center;
+    animation: flowerBreathe 3200ms ease-in-out 2200ms infinite alternate;
+}
+
+.flower-emoji {
+    font-size: 78px;
+    filter: drop-shadow(0 14px 30px rgba(40, 15, 30, 0.25));
+}
+
+@keyframes flowerGrow {
+    0% {
+        transform: scale(0.15) translateY(40px);
+        opacity: 0;
+    }
+    40% {
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes flowerSway {
+    0% {
+        transform: rotate(-2deg);
+    }
+    50% {
+        transform: rotate(2.5deg);
+    }
+    100% {
+        transform: rotate(-1.5deg);
+    }
+}
+
+@keyframes flowerBreathe {
+    0% {
+        transform: translateX(-50%) scale(1);
+    }
+    100% {
+        transform: translateX(-50%) scale(1.06);
+    }
+}
 /* Floating hearts + flowers background */
 .floating-bg {
     position: fixed;
@@ -851,6 +953,25 @@ button:active {
     }
     .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gallery-container {
+        padding: 20px 10px;
+    }
+
+    .header-title {
+        font-size: 16px;
+    }
+
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 11px;
     }
 }
 

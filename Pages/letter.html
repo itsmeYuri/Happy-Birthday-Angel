@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Letter</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="letter.css">
 </head>
 <body>
     <!-- Header with Navigation -->
@@ -21,12 +22,61 @@
         </div>
     </header>
 
-    <div class="login-container">
-        <h1>Letter</h1>
-        <p style="text-align: center; color: #666; margin: 20px 0;">
-            A special letter just for you.
-        </p>
+    <div class="letter-container">
+        <div class="envelope-wrapper">
+            <div class="envelope">
+                <div class="envelope-sides"></div>
+                <div class="heart-seal"></div>
+                
+                <div class="letter-content">
+                    <div class="close-btn">&times;</div>
+                    <div class="letter-text">
+                        <h2>Dear Angel,</h2>
+                        <p>
+                            Happy Birthday to my Lovely Angel! bebe i love you so much and napaka greatfull ako na nakilala kita and naging part ka ng life ko. <br> and thank you kase di ka nagsawa sakin despite na napaka kulit ko minsan. and you alway taking care of me. <br>
+                            i wish na sana lagi kang masaya at laging andyan ako to make you happy, and im always proud of you sa lahat lahat ng bagay na ginawagawa mo
+                            at sa mga bagay na ma achieve mo in the future. i hope bebe na makapag celebrate pa tayo ng birthday natin ng magkasama. <br> 
+                            I LOVE YOU SO MUCH BEBE MWA MWAAAAAAAAAH TAKE CARE AND <br> 
+                            HAPPY HAPPY BIRTHDAY AGAIN MY LOVE! 🎉🎂🎁🎈
+                        </p>
+                        <br>
+                        <p>
+                            With love,<br>
+                            Your Lovely poging darryl:>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
     <script src="../script.js"></script>
+    <script>
+        const envelopeWrapper = document.querySelector('.envelope-wrapper');
+        const closeBtn = document.querySelector('.close-btn');
+
+        envelopeWrapper.addEventListener('click', function(e) {
+            if (e.target.closest('.close-btn')) return;
+            
+            if (!this.classList.contains('open')) {
+                this.classList.add('open');
+                
+                // Wait for the slide-out animation to finish before expanding
+                setTimeout(() => {
+                    this.classList.add('expanded');
+                }, 800);
+            }
+        });
+
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            envelopeWrapper.classList.remove('expanded');
+            
+            // Wait for collapse animation then close envelope
+            setTimeout(() => {
+                envelopeWrapper.classList.remove('open');
+            }, 500);
+        });
+    </script>
 </body>
 </html>

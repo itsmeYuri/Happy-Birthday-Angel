@@ -36,6 +36,9 @@ function assetUrl(pathFromScriptRoot) {
 
 // Floating hearts + flowers background (runs on every page that includes script.js)
 function initFloatingBackground() {
+    // Skip on flower page - it has its own animated garden
+    if (document.body.classList.contains('flower-page')) return;
+    
     // Respect users who prefer reduced motion
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
@@ -105,28 +108,49 @@ function initFloatingBackground() {
 }
 
 // -----------------------------------------------------------------------------
-// Persistent background "paper rustle" audio
-//
-// Important constraints:
-// - Must start ONLY after user interaction (autoplay policies).
-// - Must "continue" across page navigation.
-//
-// Since this project uses multi-page navigation (full reload on each page),
-// we persist playback state (enabled + approximate position) in localStorage.
-// On each page we restore and attempt to resume. If autoplay is blocked, we
-// show a small "Enable sound" button so the user can re-authorize playback.
+// Persistent background music (Global Player)
 // -----------------------------------------------------------------------------
-const BG_AUDIO_STORAGE_KEY = 'bg_rustle_v1';
-let bgAudio = null;
+const BG_AUDIO_STORAGE_KEY = 'bg_music_player_v2';
+let globalAudio = null;
 let bgAudioSaveTimer = null;
-let bgAudioFallback = null; // WebAudio fallback if file isn't available
+
+// Default song
+const DEFAULT_SONG = {
+    path: 'audio/Taylor Swift - Paper Rings.mp3',
+    name: 'Taylor Swift - Paper Rings'
+};
+
+// Song List for Random Selection
+const SONG_LIST = [
+    { path: 'audio/Apocalypse - Cigarettes After Sex - Cigarettes After Sex.mp3', name: 'Apocalypse - Cigarettes After Sex' },
+    { path: 'audio/Arctic Monkeys - I Wanna Be Yours.mp3', name: 'Arctic Monkeys - I Wanna Be Yours' },
+    { path: 'audio/Clif and Yden - Sunsets with You.mp3', name: 'Clif and Yden - Sunsets with You' },
+    { path: 'audio/Paramore - The Only Exception.mp3', name: 'Paramore - The Only Exception' },
+    { path: 'audio/Taylor Swift - Lover.mp3', name: 'Taylor Swift - Lover' },
+    { path: 'audio/Taylor Swift - Paper Rings.mp3', name: 'Taylor Swift - Paper Rings' },
+    { path: 'audio/The 1975 - About You.mp3', name: 'The 1975 - About You' },
+    { path: 'audio/The 1975 - It\'s Not Living (If It\'s Not With You).mp3', name: 'The 1975 - It\'s Not Living (If It\'s Not With You)' }
+];
 
 function loadBgState() {
     try {
         const raw = localStorage.getItem(BG_AUDIO_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : { enabled: false, playing: false, time: 0 };
+        // Default to Paper Rings if no state exists
+        return raw ? JSON.parse(raw) : { 
+            enabled: true, 
+            playing: true, 
+            time: 0, 
+            currentSrc: assetUrl(DEFAULT_SONG.path), 
+            currentName: DEFAULT_SONG.name 
+        };
     } catch (e) {
-        return { enabled: false, playing: false, time: 0 };
+        return { 
+            enabled: true, 
+            playing: true, 
+            time: 0, 
+            currentSrc: assetUrl(DEFAULT_SONG.path), 
+            currentName: DEFAULT_SONG.name 
+        };
     }
 }
 
@@ -142,14 +166,22 @@ function saveBgState(patch) {
 
 function ensureEnableSoundButton() {
     if (document.getElementById('enableSoundBtn')) return;
+    
+    // Don't show on letter page (handled by CSS, but good to check)
+    if (window.location.pathname.includes('letter.html')) return;
 
     const btn = document.createElement('button');
     btn.id = 'enableSoundBtn';
     btn.type = 'button';
-    btn.textContent = 'Enable sound';
+    btn.textContent = 'Enable Music';
     btn.className = 'enable-sound-btn';
     btn.addEventListener('click', function() {
-        startBackgroundRustle(true);
+        if (globalAudio) {
+            globalAudio.play().then(() => {
+                hideEnableSoundButton();
+                syncUI();
+            });
+        }
     });
 
     document.body.appendChild(btn);
@@ -160,207 +192,268 @@ function hideEnableSoundButton() {
     if (btn) btn.remove();
 }
 
-async function fileExists(url) {
-    try {
-        const res = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
-        return res.ok;
-    } catch (e) {
-        return false;
-    }
-}
+async function initGlobalAudio() {
+    if (globalAudio) return;
 
-// WebAudio fallback: a gentle, looping "paper rustle" style noise texture.
-function startRustleFallback() {
-    if (bgAudioFallback && bgAudioFallback.isRunning) return;
+    let state = loadBgState();
+    
+    // Check if we should randomize song (Gallery, Playlist, Future, Flower, Letter)
+    const pageName = window.location.pathname.toLowerCase();
+    const randomizePages = ['gallery.html', 'playlist.html', 'future.html', 'flower.html', 'letter.html'];
+    const shouldRandomize = randomizePages.some(p => pageName.includes(p));
 
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-
-    const ctx = new AudioCtx();
-    const gain = ctx.createGain();
-    gain.gain.value = 0.0;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 1200;
-    filter.Q.value = 0.8;
-
-    // Create looping noise buffer
-    const bufferSize = ctx.sampleRate * 2;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * 0.6;
+    if (shouldRandomize) {
+        // Pick a random song
+        const randomSong = SONG_LIST[Math.floor(Math.random() * SONG_LIST.length)];
+        // Update state to use this new song from the beginning
+        state.currentSrc = assetUrl(randomSong.path);
+        state.currentName = randomSong.name;
+        state.time = 0;
+        state.playing = true;
+        
+        // Save immediately so subsequent reloads/navs track this song
+        saveBgState(state);
     }
 
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.loop = true;
+    const src = state.currentSrc || assetUrl(DEFAULT_SONG.path);
+    
+    globalAudio = new Audio(src);
+    globalAudio.loop = true; // Loop the current song
+    globalAudio.preload = 'auto';
+    globalAudio.volume = 0.5;
 
-    // Slow amplitude movement to feel like rustling
-    const lfo = ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.value = 0.35;
-
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.06;
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(gain.gain);
-
-    src.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    src.start();
-    lfo.start();
-
-    // Fade in
-    gain.gain.setValueAtTime(0.0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.11, ctx.currentTime + 0.5);
-
-    bgAudioFallback = {
-        ctx,
-        gain,
-        isRunning: true,
-        stop: function() {
-            try {
-                gain.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 0.25);
-                setTimeout(function() {
-                    try { ctx.close(); } catch (e) {}
-                }, 350);
-            } catch (e) {}
-            bgAudioFallback.isRunning = false;
+    // Restore time
+    // We bind it to 'loadedmetadata' to ensure it sticks.
+    globalAudio.addEventListener('loadedmetadata', function() {
+        if (state.time && state.time > 0) {
+            globalAudio.currentTime = state.time;
         }
-    };
-}
+    });
 
-function stopRustleFallback() {
-    if (bgAudioFallback && bgAudioFallback.isRunning) {
-        bgAudioFallback.stop();
+    // Setup periodic state saving
+    if (!bgAudioSaveTimer) {
+        bgAudioSaveTimer = setInterval(function() {
+            if (globalAudio) {
+                // If playing, update time
+                if (!globalAudio.paused) {
+                     saveBgState({
+                        playing: true,
+                        time: globalAudio.currentTime,
+                        currentSrc: globalAudio.src
+                     });
+                }
+            }
+        }, 1000);
     }
-}
+    
+    // Save state before unloading the page to capture precise time
+    window.addEventListener('beforeunload', function() {
+        if (globalAudio) {
+             saveBgState({
+                playing: !globalAudio.paused,
+                time: globalAudio.currentTime,
+                currentSrc: globalAudio.src
+             });
+        }
+    });
 
-async function initBackgroundRustle() {
-    if (bgAudio) return;
+    // Attach events for UI sync
+    globalAudio.addEventListener('play', syncUI);
+    globalAudio.addEventListener('pause', syncUI);
+    globalAudio.addEventListener('timeupdate', syncUI);
+    globalAudio.addEventListener('ended', function() {
+        // Loop is handled by loop=true, but if we want manual loop:
+        if (!globalAudio.loop) {
+             // For now do nothing
+        }
+        syncUI();
+    });
 
-    // Prefer a real audio file if you add it to /audio
-    // Put it here: audio/paper-rustle.mp3
-    const fileUrl = assetUrl('audio/paper-rustle.mp3');
-    const hasFile = await fileExists(fileUrl);
-
-    if (!hasFile) {
-        bgAudio = { _fallback: true };
-        return;
-    }
-
-    bgAudio = new Audio(fileUrl);
-    bgAudio.loop = true;
-    bgAudio.preload = 'auto';
-    bgAudio.volume = 0.22;
-}
-
-async function startBackgroundRustle(fromUserGesture) {
-    await initBackgroundRustle();
-
-    const state = loadBgState();
-    saveBgState({ enabled: true, playing: true });
-
-    // If we don't have a file, use the fallback (requires user gesture on many browsers)
-    if (bgAudio && bgAudio._fallback) {
-        if (fromUserGesture) {
-            startRustleFallback();
+    // Attempt autoplay if state says playing
+    if (state.playing) {
+        try {
+            await globalAudio.play();
             hideEnableSoundButton();
-        } else {
-            // Need interaction
+        } catch (e) {
+            console.log("Autoplay blocked, waiting for interaction");
+            // Don't overwrite playing state immediately, just show button
             ensureEnableSoundButton();
         }
-        return;
+    } else {
+        // If strictly paused, ensure button is hidden unless we want to prompt?
+        // Actually, if it's paused, we just leave it paused.
+    }
+    
+    syncUI();
+}
+
+// UI Synchronization (for Playlist Page)
+function syncUI() {
+    // Only run if we are on a page with player controls
+    if (!document.getElementById('playBtn')) return;
+
+    const isPlaying = globalAudio && !globalAudio.paused;
+    
+    // Buttons
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (playBtn && pauseBtn) {
+        playBtn.style.display = isPlaying ? 'none' : 'inline-block';
+        pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
     }
 
-    // Restore position if we have it (best-effort across reloads)
-    if (bgAudio && typeof state.time === 'number' && state.time > 0) {
-        try { bgAudio.currentTime = state.time; } catch (e) {}
-    }
-
-    if (!bgAudio) return;
-
-    try {
-        await bgAudio.play();
-        hideEnableSoundButton();
-        // Persist time periodically so navigation can resume
-        if (!bgAudioSaveTimer) {
-            bgAudioSaveTimer = setInterval(function() {
-                try {
-                    saveBgState({
-                        playing: !bgAudio.paused,
-                        time: bgAudio.currentTime || 0
-                    });
-                } catch (e) {}
-            }, 500);
+    // Disc Animation
+    const disc = document.getElementById('musicDisc');
+    if (disc) {
+        if (isPlaying) {
+            // We need a running animation loop for smooth rotation
+            // But for simplicity, let's just use CSS class or check if we need to start the JS animation loop
+            startDiscAnimation(); 
+        } else {
+            // Stop animation is handled in the loop
         }
-    } catch (e) {
-        // Autoplay blocked: show a button that the user can tap
-        ensureEnableSoundButton();
+    }
+
+    // Progress Bar & Time
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeSpan = document.getElementById('currentTime');
+    const durationSpan = document.getElementById('duration');
+    const songNameDisplay = document.getElementById('currentSongName');
+
+    if (globalAudio) {
+        if (progressBar) {
+            if (!progressBar.getAttribute('mousedown')) { // Don't update while dragging
+                progressBar.max = globalAudio.duration || 100;
+                progressBar.value = globalAudio.currentTime;
+            }
+        }
+        if (currentTimeSpan) currentTimeSpan.textContent = formatTime(globalAudio.currentTime);
+        if (durationSpan) durationSpan.textContent = formatTime(globalAudio.duration);
+        
+        // Update Song Name
+        const state = loadBgState();
+        if (songNameDisplay && state.currentName) {
+            // Only update if text is different to avoid flickering/reflow
+            if (!songNameDisplay.textContent.includes(state.currentName)) {
+                 songNameDisplay.textContent = 'Now Playing: ' + state.currentName;
+            }
+        }
     }
 }
 
-async function restoreBackgroundRustle() {
-    const state = loadBgState();
-    if (!state.enabled) return;
+// Disc Animation Logic
+let discAnimFrame;
+let discRotation = 0;
+function startDiscAnimation() {
+    if (discAnimFrame) return; // Already running
 
-    // Try to resume automatically; if blocked, user can tap "Enable sound"
-    await startBackgroundRustle(false);
+    function animate() {
+        const disc = document.getElementById('musicDisc');
+        if (!disc) {
+            cancelAnimationFrame(discAnimFrame);
+            discAnimFrame = null;
+            return;
+        }
+
+        if (globalAudio && !globalAudio.paused) {
+            discRotation += 0.5;
+            disc.style.transform = `rotate(${discRotation}deg)`;
+            discAnimFrame = requestAnimationFrame(animate);
+        } else {
+            cancelAnimationFrame(discAnimFrame);
+            discAnimFrame = null;
+        }
+    }
+    animate();
+}
+
+// Public Controls (called by UI)
+function playAudio() {
+    if (globalAudio) {
+        globalAudio.play().catch(() => ensureEnableSoundButton());
+    }
+}
+
+function pauseAudio() {
+    if (globalAudio) globalAudio.pause();
+}
+
+function stopAudio() {
+    if (globalAudio) {
+        globalAudio.pause();
+        globalAudio.currentTime = 0;
+        syncUI();
+    }
+}
+
+function changeSong(path, name) {
+    if (!globalAudio) globalAudio = new Audio();
+    
+    // Resolve path correctly
+    // If path starts with ../, and we are in root, we need to fix it?
+    // actually changeSong is usually called from HTML. 
+    // The `assetUrl` helper is robust, but `path` passed from HTML might be relative to that HTML.
+    // Let's rely on the browser resolving the src, OR normalize it.
+    // The safest is to just set src.
+    
+    globalAudio.src = path;
+    globalAudio.currentTime = 0;
+    globalAudio.play().catch(() => ensureEnableSoundButton());
+    
+    saveBgState({ 
+        currentSrc: globalAudio.src, // Save absolute URL
+        currentName: name,
+        playing: true,
+        time: 0
+    });
+    
+    syncUI();
 }
 
 // Called from the landing page "Continue" button.
 function continueFromLanding(nextPage) {
-    startBackgroundRustle(true).finally(function() {
+    if (globalAudio) {
+        globalAudio.play().catch(() => {}).finally(() => {
+             saveBgState({ playing: true });
+             window.location.href = nextPage;
+        });
+    } else {
         window.location.href = nextPage;
-    });
-}
-
-// Initialize DOM elements
-function initDOMElements() {
-    audio = document.getElementById('audioPlayer');
-    disc = document.getElementById('musicDisc');
-    playBtn = document.getElementById('playBtn');
-    pauseBtn = document.getElementById('pauseBtn');
-    progressBar = document.getElementById('progressBar');
-    currentTimeSpan = document.getElementById('currentTime');
-    durationSpan = document.getElementById('duration');
-    currentSongName = document.getElementById('currentSongName');
+    }
 }
 
 // Initialize on page load
 window.addEventListener('load', function() {
-    // If this page has the fixed header, offset the page content (not the header itself)
+    // If this page has the fixed header, offset the page content
     if (document.querySelector('.header')) {
         document.body.classList.add('has-header');
     }
+    
     initFloatingBackground();
-    restoreBackgroundRustle();
+    
+    // Initialize Global Audio
+    initGlobalAudio();
+
+    // DOM Elements for Playlist Page
     initDOMElements();
 });
 
-// Change song
-function changeSong(songPath, songName) {
-    console.log('Changing song to:', songPath);
-    if (audio) {
-        audio.src = songPath;
-        if (currentSongName) currentSongName.textContent = 'Now Playing: ' + songName;
-        playAudio();
-    } else {
-        console.log('Audio element not found');
+// Helper for playlist page inputs
+function initDOMElements() {
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.addEventListener('input', function() {
+            // User is dragging
+            progressBar.setAttribute('mousedown', 'true');
+        });
+        progressBar.addEventListener('change', function() {
+            // User released
+            if (globalAudio) {
+                globalAudio.currentTime = this.value;
+            }
+            this.removeAttribute('mousedown');
+        });
     }
-}
-
-// Update duration when metadata is loaded
-if (audio) {
-    audio.addEventListener('loadedmetadata', function() {
-        if (durationSpan) durationSpan.textContent = formatTime(audio.duration);
-        if (progressBar) progressBar.max = audio.duration;
-    });
 }
 
 // Format time in MM:SS
@@ -371,85 +464,6 @@ function formatTime(seconds) {
     return minutes + ':' + (secs < 10 ? '0' : '') + secs;
 }
 
-// Play audio
-function playAudio() {
-    if (audio) {
-        let playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.then(function() {
-                isPlaying = true;
-                if (playBtn) playBtn.style.display = 'none';
-                if (pauseBtn) pauseBtn.style.display = 'inline-block';
-                startDiscAnimation();
-            }).catch(function(error) {
-                console.log('Play failed:', error);
-            });
-        } else {
-            isPlaying = true;
-            if (playBtn) playBtn.style.display = 'none';
-            if (pauseBtn) pauseBtn.style.display = 'inline-block';
-            startDiscAnimation();
-        }
-    }
-}
-
-// Pause audio
-function pauseAudio() {
-    if (audio) {
-        audio.pause();
-        isPlaying = false;
-        if (playBtn) playBtn.style.display = 'inline-block';
-        if (pauseBtn) pauseBtn.style.display = 'none';
-        cancelAnimationFrame(animationId);
-    }
-}
-
-// Stop audio
-function stopAudio() {
-    if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        isPlaying = false;
-        if (playBtn) playBtn.style.display = 'inline-block';
-        if (pauseBtn) pauseBtn.style.display = 'none';
-        cancelAnimationFrame(animationId);
-        if (disc) disc.style.transform = 'rotate(0deg)';
-        if (progressBar) progressBar.value = 0;
-        if (currentTimeSpan) currentTimeSpan.textContent = '0:00';
-        rotationAngle = 0;
-    }
-}
-
-// Animate disc rotation
-function startDiscAnimation() {
-    function animate() {
-        if (isPlaying && disc) {
-            rotationAngle += 2; // Rotation speed
-            disc.style.transform = 'rotate(' + rotationAngle + 'deg)';
-            if (progressBar) progressBar.value = audio.currentTime;
-            if (currentTimeSpan) currentTimeSpan.textContent = formatTime(audio.currentTime);
-            animationId = requestAnimationFrame(animate);
-        }
-    }
-    animate();
-}
-
-// Update progress bar when user scrubs
-if (progressBar) {
-    progressBar.addEventListener('input', function() {
-        if (audio) audio.currentTime = progressBar.value;
-    });
-}
-
-// Update progress bar as audio plays
-if (audio) {
-    audio.addEventListener('timeupdate', function() {
-        if (progressBar) progressBar.value = audio.currentTime;
-        if (currentTimeSpan) currentTimeSpan.textContent = formatTime(audio.currentTime);
-    });
-
-    // Handle audio ended
-    audio.addEventListener('ended', function() {
-        stopAudio();
-    });
-}
+// -----------------------------------------------------------------------------
+// End Global Player
+// -----------------------------------------------------------------------------
