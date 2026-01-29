@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Angel</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <h1>Welcome</h1>
+            <p>Angel</p>
+            <p class="message">I made this website for you,<br>a place where I put my love to you</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="main-content">
+        <div class="love-story-container">
+            <h1>💕 Our Love Story 💕</h1>
+            
+            <p>
+                Welcome to a special place created just for you. This website is filled with memories, 
+                feelings, and all the love I have for you.
+            </p>
+
+            <h2>The Beginning</h2>
+            <p>
+                From the moment we met, you brought so much joy and light into my life. 
+                Every moment with you feels special and precious.
+            </p>
+
+            <h2>What Makes You Special</h2>
+            <p>
+                Your smile, your laugh, the way you see the world with such kindness and beauty. 
+                You inspire me every single day to be a better person.
+            </p>
+
+            <h2>Forever and Always</h2>
+            <p>
+                This website is a testament to my love for you. Every page, every detail, 
+                every word written here comes from the deepest part of my heart. 
+                Thank you for being the most wonderful person in my life.
+            </p>
+
+            <p class="birthday-message">
+                Happy Birthday Angel! 🎉❤️
+            </p>
+        </div>
+
+        <button class="continue-btn" onclick="continueFromLanding('gallery.html')">Continue</button>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+        // Show loading screen for 5 seconds, then show main content
+        window.addEventListener("load", function() {
+            setTimeout(function() {
+                document.getElementById("loadingScreen").style.display = "none";
+                document.getElementById("mainContent").classList.add("show");
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

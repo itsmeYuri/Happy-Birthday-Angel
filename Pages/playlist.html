@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">OUR SPACE</div>
+            <nav class="nav-menu">
+                <button class="nav-btn" onclick="window.location.href='gallery.html'">Gallery</button>
+                <button class="nav-btn" onclick="window.location.href='playlist.html'">Playlist</button>
+                <button class="nav-btn" onclick="window.location.href='future.html'">Future</button>
+                <button class="nav-btn" onclick="window.location.href='flower.html'">Flower</button>
+                <button class="nav-btn" onclick="window.location.href='letter.html'">Letter</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="login-container">
+        <div class="music-player">
+            <h1>Playlist</h1>
+            <p style="text-align: center; color: rgba(255, 255, 255, 0.8); margin: 20px 0;">
+                Our favorite songs and memories together.
+            </p>
+
+            <!-- Spinning Disc -->
+            <div class="disc-container">
+                <div id="musicDisc" class="music-disc">
+                    <div class="disc-inner">
+                        <div class="disc-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Player Controls -->
+            <div class="player-controls">
+                <!-- Song Playlist -->
+                <div class="song-list">
+                    <h3>Our Playlist</h3>
+                    <div class="songs">
+                        <div class="song-item" onclick="changeSong('../audio/Apocalypse - Cigarettes After Sex - Cigarettes After Sex.mp3', 'Apocalypse - Cigarettes After Sex')">🎵 Apocalypse - Cigarettes After Sex</div>
+                        <div class="song-item" onclick="changeSong('../audio/Arctic Monkeys - I Wanna Be Yours.mp3', 'Arctic Monkeys - I Wanna Be Yours')">🎵 Arctic Monkeys - I Wanna Be Yours</div>
+                        <div class="song-item" onclick="changeSong('../audio/Clif and Yden - Sunsets with You.mp3', 'Clif and Yden - Sunsets with You')">🎵 Clif and Yden - Sunsets with You</div>
+                        <div class="song-item" onclick="changeSong('../audio/Paramore - The Only Exception.mp3', 'Paramore - The Only Exception')">🎵 Paramore - The Only Exception</div>
+                        <div class="song-item" onclick="changeSong('../audio/Taylor Swift - Lover.mp3', 'Taylor Swift - Lover')">🎵 Taylor Swift - Lover</div>
+                        <div class="song-item" onclick="changeSong('../audio/Taylor Swift - Paper Rings.mp3', 'Taylor Swift - Paper Rings')">🎵 Taylor Swift - Paper Rings</div>
+                        <div class="song-item" onclick="changeSong('../audio/The 1975 - About You.mp3', 'The 1975 - About You')">🎵 The 1975 - About You</div>
+                        <div class="song-item" onclick="changeSong('../audio/The 1975 - It\'s Not Living (If It\'s Not With You).mp3', 'The 1975 - It\'s Not Living (If It\'s Not With You)')">🎵 The 1975 - It's Not Living (If It's Not With You)</div>
+                    </div>
+                </div>
+
+                <audio id="audioPlayer" style="width: 100%; margin: 20px 0;">
+                    <source src="../audio/Apocalypse - Cigarettes After Sex - Cigarettes After Sex.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+                
+                <div id="currentSongName" class="current-song">Now Playing: Apocalypse - Cigarettes After Sex</div>
+
+                <div class="player-buttons">
+                    <button id="playBtn" class="icon-btn" onclick="playAudio()">▶</button>
+                    <button id="pauseBtn" class="icon-btn" onclick="pauseAudio()" style="display: none;">⏸</button>
+                    <button class="icon-btn" onclick="stopAudio()">⏹</button>
+                </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+</body>
+</html>

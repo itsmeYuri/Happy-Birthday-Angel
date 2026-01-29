@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Step 1: Name Entry -->
+        <div id="step1" class="step-section">
+            <h1>Welcome</h1>
+            <div class="step-indicator">Step 1 of 2: Enter Your Name</div>
+            <form id="nameForm">
+                <div class="form-group">
+                    <label for="name">Enter Your Name:</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder="Your name"
+                        required
+                    >
+                </div>
+                <button type="submit">Next</button>
+                <div id="nameError" class="error"></div>
+            </form>
+        </div>
+
+        <!-- Step 2: Secret Code Entry -->
+        <div id="step2" class="step-section hidden">
+            <h1>Secret Code</h1>
+            <div class="step-indicator">Step 2 of 2: Enter Secret Code</div>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Welcome, <strong id="displayName"></strong>!
+            </p>
+            <form id="codeForm">
+                <div class="form-group">
+                    <label for="secretCode">Enter Secret Code:</label>
+                    <input 
+                        type="text" 
+                        id="secretCode" 
+                        name="secretCode" 
+                        placeholder="Enter your secret code"
+                        required
+                    >
+                </div>
+                <button type="submit">Login</button>
+                <button type="button" class="back-btn" onclick="goBackToStep1()">Back</button>
+                <div id="codeError" class="error"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+        // Valid access codes (independent of name)
+        const validCodes = [
+            "013005",
+            "123456",
+            "999888",
+            "555444"
+        ];
+
+        let currentName = "";
+
+        // Step 1: Handle name submission
+        document.getElementById("nameForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value.trim();
+            const nameError = document.getElementById("nameError");
+
+            if (name === "") {
+                nameError.textContent = "Please enter your name.";
+                return;
+            }
+
+            if (name.length < 2) {
+                nameError.textContent = "Name must be at least 2 characters.";
+                return;
+            }
+
+            currentName = name;
+            nameError.textContent = "";
+            
+            // Move to step 2
+            document.getElementById("step1").classList.add("hidden");
+            document.getElementById("step2").classList.remove("hidden");
+            document.getElementById("displayName").textContent = name;
+            document.getElementById("secretCode").focus();
+        });
+
+        // Step 2: Handle secret code submission
+        document.getElementById("codeForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const code = document.getElementById("secretCode").value.trim();
+            const codeError = document.getElementById("codeError");
+
+            if (code === "") {
+                codeError.textContent = "Please enter the secret code.";
+                return;
+            }
+
+            // Check if the entered code is valid (independent of name)
+            if (validCodes.includes(code)) {
+                codeError.textContent = "";
+                
+                // Redirect to landing page
+                setTimeout(function() {
+                    window.location.href = "landing.html";
+                }, 500);
+            } else {
+                codeError.textContent = "Invalid secret code. Please try again.";
+                document.getElementById("secretCode").value = "";
+                document.getElementById("secretCode").focus();
+            }
+        });
+
+        // Go back to step 1
+        function goBackToStep1() {
+            document.getElementById("step2").classList.add("hidden");
+            document.getElementById("step1").classList.remove("hidden");
+            document.getElementById("nameError").textContent = "";
+            document.getElementById("codeError").textContent = "";
+            document.getElementById("secretCode").value = "";
+            document.getElementById("name").focus();
+        }
+
+        // Focus on name input on page load
+        window.addEventListener("load", function() {
+            document.getElementById("name").focus();
+        });
+    </script>
+</body>
+</html>

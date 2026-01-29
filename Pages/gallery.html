@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">OUR SPACE</div>
+            <nav class="nav-menu">
+                <button class="nav-btn" onclick="window.location.href='gallery.html'">Gallery</button>
+                <button class="nav-btn" onclick="window.location.href='playlist.html'">Playlist</button>
+                <button class="nav-btn" onclick="window.location.href='future.html'">Future</button>
+                <button class="nav-btn" onclick="window.location.href='flower.html'">Flower</button>
+                <button class="nav-btn" onclick="window.location.href='letter.html'">Letter</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="gallery-container">
+        <div class="gallery-header">
+            <h1>OUR GALLERY</h1>
+            <p class="gallery-subtitle">moment capture in time</p>
+        </div>
+
+        <div class="gallery-grid">
+            <img src="../Images/6327905674209201749.jpg" alt="Gallery image 1" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201750.jpg" alt="Gallery image 2" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201751.jpg" alt="Gallery image 3" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201752.jpg" alt="Gallery image 4" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201753.jpg" alt="Gallery image 5" class="gallery-img" onclick="openModal(this)">
+
+            <img src="../Images/6327905674209201754.jpg" alt="Gallery image 6" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201755.jpg" alt="Gallery image 7" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201756.jpg" alt="Gallery image 8" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201757.jpg" alt="Gallery image 9" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201758.jpg" alt="Gallery image 10" class="gallery-img" onclick="openModal(this)">
+
+            <img src="../Images/6327905674209201759.jpg" alt="Gallery image 11" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201760.jpg" alt="Gallery image 12" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201761.jpg" alt="Gallery image 13" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201762.jpg" alt="Gallery image 14" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201763.jpg" alt="Gallery image 15" class="gallery-img" onclick="openModal(this)">
+
+            <img src="../Images/6327905674209201764.jpg" alt="Gallery image 16" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201765.jpg" alt="Gallery image 17" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201766.jpg" alt="Gallery image 18" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201767.jpg" alt="Gallery image 19" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201768.jpg" alt="Gallery image 20" class="gallery-img" onclick="openModal(this)">
+
+            <img src="../Images/6327905674209201769.jpg" alt="Gallery image 21" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201770.jpg" alt="Gallery image 22" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201771.jpg" alt="Gallery image 23" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201772.jpg" alt="Gallery image 24" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201773.jpg" alt="Gallery image 25" class="gallery-img" onclick="openModal(this)">
+
+            <img src="../Images/6327905674209201774.jpg" alt="Gallery image 26" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201775.jpg" alt="Gallery image 27" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201776.jpg" alt="Gallery image 28" class="gallery-img" onclick="openModal(this)">
+            <img src="../Images/6327905674209201777.jpg" alt="Gallery image 29" class="gallery-img" onclick="openModal(this)">
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script>
+        function openModal(img) {
+            const modal = document.getElementById("imageModal");
+            const modalImg = document.getElementById("modalImage");
+            modalImg.src = img.src;
+            modal.style.display = "flex";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("imageModal");
+            modal.style.display = "none";
+        }
+
+        // Close modal when pressing Escape key
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
+    </script>
+    <script src="../script.js"></script>
+</body>
+</html>
