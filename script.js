@@ -12,6 +12,28 @@ let isPlaying = false;
 let rotationAngle = 0;
 let animationId;
 
+// Resolve asset URLs relative to where `script.js` is served from.
+// This keeps paths working from both `/index.html` and `/Pages/*.html` (GitHub Pages friendly).
+function getScriptBaseUrl() {
+    const current = document.currentScript;
+    if (current && current.src) return new URL('.', current.src);
+
+    const scripts = document.getElementsByTagName('script');
+    for (let i = scripts.length - 1; i >= 0; i--) {
+        const src = scripts[i].src || '';
+        if (src.endsWith('/script.js') || src.endsWith('script.js')) {
+            return new URL('.', src);
+        }
+    }
+
+    // Fallback: relative to current page
+    return new URL('./', window.location.href);
+}
+
+function assetUrl(pathFromScriptRoot) {
+    return new URL(pathFromScriptRoot, getScriptBaseUrl()).toString();
+}
+
 // Floating hearts + flowers background (runs on every page that includes script.js)
 function initFloatingBackground() {
     // Respect users who prefer reduced motion
@@ -224,7 +246,7 @@ async function initBackgroundRustle() {
 
     // Prefer a real audio file if you add it to /audio
     // Put it here: audio/paper-rustle.mp3
-    const fileUrl = '../audio/paper-rustle.mp3';
+    const fileUrl = assetUrl('audio/paper-rustle.mp3');
     const hasFile = await fileExists(fileUrl);
 
     if (!hasFile) {
