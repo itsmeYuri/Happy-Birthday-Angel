@@ -98,6 +98,42 @@ html {
     line-height: 1;
 }
 
+/* Responsive header / nav */
+@media (max-width: 1024px) {
+    .header-content {
+        gap: 16px;
+        padding-inline: 12px;
+    }
+
+    .header-title {
+        font-size: 20px;
+    }
+
+    .nav-menu {
+        max-width: 70%;
+    }
+}
+
+@media (max-width: 600px) {
+    .header-content {
+        gap: 10px;
+    }
+
+    .header-title {
+        font-size: 18px;
+    }
+
+    .nav-menu {
+        max-width: 100%;
+    }
+
+    .nav-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+}
+
 .nav-btn:hover {
     background: rgba(255, 79, 154, 0.10);
     border-color: rgba(255, 79, 154, 0.22);
@@ -125,14 +161,14 @@ html {
     text-align: center;
     color: var(--text);
     margin-bottom: 14px;
-    font-size: 32px;
+    font-size: clamp(24px, 4vw, 32px);
     letter-spacing: 0.2px;
 }
 
 /* Login "cool" card */
 .step-section {
     max-width: 520px;
-    margin: 40px auto;
+    margin: clamp(24px, 5vh, 40px) auto;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 18px;
@@ -323,7 +359,7 @@ button:active {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 18px;
-    padding: 50px;
+    padding: clamp(28px, 5vw, 50px);
     box-shadow: var(--shadow);
     backdrop-filter: blur(12px);
     animation: slideUp 0.6s ease-out;
@@ -428,7 +464,7 @@ button:active {
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     padding: 0 5px;
 }
